@@ -1,0 +1,32 @@
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app: shipwright-trigger
+  name: shipwright-trigger
+subjects:
+  - kind: ServiceAccount
+    namespace: shipwright-build
+    name: shipwright-trigger
+roleRef:
+  kind: ClusterRole
+  name: shipwright-trigger
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app: shipwright-trigger
+  namespace: shipwright-build
+  name: shipwright-trigger
+subjects:
+  - kind: ServiceAccount
+    namespace: shipwright-build
+    name: shipwright-trigger
+roleRef:
+  kind: Role
+  name: shipwright-trigger
+  apiGroup: rbac.authorization.k8s.io

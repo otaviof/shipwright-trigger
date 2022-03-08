@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: shipwright-trigger
+  namespace: shipwright-build
+  name: shipwright-trigger
+spec:
+  type: ClusterIP
+  ports:
+    - name: webhook
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    name: shipwright-trigger

@@ -1,0 +1,44 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: shipwright-build
+  name: shipwright-trigger
+rules:
+  - apiGroups: ["tekton.dev"]
+    resources: ["runs", "pipelineruns", "taskruns"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["tekton.dev"]
+    resources: ["runs/status", "pipelineruns", "pipelineruns/status", "taskruns", "taskruns/status"]
+    verbs: ["update", "patch"]
+  - apiGroups: ["shipwright.io"]
+    resources: ["builds", "buildruns"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["shipwright.io"]
+    resources: ["buildruns"]
+    verbs: ["get", "create", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: shipwright-trigger
+rules:
+  - apiGroups: ["tekton.dev"]
+    resources: ["runs", "pipelineruns", "taskruns"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["tekton.dev"]
+    resources: ["runs/status", "pipelineruns", "pipelineruns/status", "taskruns", "taskruns/status"]
+    verbs: ["update", "patch"]
+  - apiGroups: ["shipwright.io"]
+    resources: ["builds", "buildruns"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["shipwright.io"]
+    resources: ["buildruns"]
+    verbs: ["get", "create", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]

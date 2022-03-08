@@ -6,8 +6,11 @@ PKG = ./pkg/...
 
 BIN ?= $(OUTPUT_DIR)/$(APP)
 
-GO_FLAGS ?= -v -mod=vendor
-GO_TEST_FLAGS ?= -race -cover
+KO_DOCKER_REPO ?= ghcr.io/otaviof
+KO_DEPLOY_DIR ?= deploy/
+
+GOFLAGS ?= -v -mod=vendor
+GOFLAGS_TEST ?= -race -cover
 
 ARGS ?=
 
@@ -15,20 +18,26 @@ ARGS ?=
 
 .PHONY: $(BIN)
 $(BIN):
-	go build $(GO_FLAGS) -o $(BIN) $(CMD)
+	go build -o $(BIN) $(CMD)
 
 build: $(BIN)
 
 default: build
 
+build-image:
+	ko publish --base-import-paths $(CMD)
+
+install:
+	ko apply --base-import-paths --recursive --filename $(KO_DEPLOY_DIR)
+
 clean:
 	rm -rf "$(OUTPUT_DIR)" || true
 
 run:
-	go run $(GO_FLAGS) $(CMD) $(ARGS)
+	go run $(CMD) $(ARGS)
 
 test: test-unit test-e2e
 
 .PHONY: test-unit
 test-unit:
-	go test $(GO_FLAGS) $(GO_TEST_FLAGS) $(CMD) $(PKG) $(ARGS)
+	go test $(GOFLAGS_TEST) $(CMD) $(PKG) $(ARGS)

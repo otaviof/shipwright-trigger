@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: shipwright-trigger
+  namespace: shipwright-build
+  name: shipwright-trigger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: shipwright-trigger
+  template:
+    metadata:
+      labels:
+        name: shipwright-trigger
+    spec:
+      serviceAccountName: shipwright-trigger
+      containers:
+        - name: shipwright-trigger
+          image: ko://github.com/otaviof/shipwright-trigger/cmd/trigger
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - containerPort: 8080
+              name: webhook-port
