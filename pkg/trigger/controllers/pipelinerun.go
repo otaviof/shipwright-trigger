@@ -34,7 +34,7 @@ func ParsePipelineRunStatus(pipelineRun *tknapisv1beta1.PipelineRun) (string, er
 	case pipelineRun.IsCancelled():
 		return tknapisv1beta1.PipelineRunReasonCancelled.String(), nil
 	case pipelineRun.IsTimedOut():
-		return tknapisv1beta1.PipelineRunReasonTimedOut.String(), nil
+		return "TimedOut", nil
 	case pipelineRun.HasStarted():
 		return tknapisv1beta1.PipelineRunReasonStarted.String(), nil
 	default:

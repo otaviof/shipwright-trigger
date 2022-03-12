@@ -36,6 +36,8 @@ type PipelineRunController struct {
 	buildInventory inventory.Interface // build triggers inventory
 }
 
+var _ Interface = &PipelineRunController{}
+
 // createBuildRun handles the actual BuildRun creation, uses the informed PipelineRun instance to
 // establish ownership. Only returns the created object name, and error.
 func (c *PipelineRunController) createBuildRun(
@@ -74,7 +76,7 @@ func (c *PipelineRunController) triggerBuildsForPipelineRun(
 	pipelineRun *tknapisv1beta1.PipelineRun,
 	buildsToBeTriggered []inventory.SearchResult,
 ) error {
-	created := []string{}
+	var created []string
 	for _, build := range buildsToBeTriggered {
 		buildRunName, err := c.createBuildRun(pipelineRun, build.BuildName.Name)
 		if err != nil {
@@ -90,6 +92,9 @@ func (c *PipelineRunController) triggerBuildsForPipelineRun(
 	// adding a label to the PipelineRun object to identify the BuildRun(s) created for it, and also,
 	// to be able to filter out objects that have already triggered Builds afterwards
 	labels := pipelineRun.GetLabels()
+	if labels == nil {
+		labels = map[string]string{}
+	}
 	labels[BuildRunsCreatedKey] = strings.Join(created, ", ")
 	labels[PipelineRunNameKey] = pipelineRun.GetName()
 	pipelineRun.SetLabels(labels)
@@ -181,13 +186,15 @@ func NewPipelineRunController(
 		"pipelineruns",
 	)
 	c := &PipelineRunController{
-		ctx:            ctx,
+		ctx: ctx,
+
 		informer:       informer,
 		lister:         informer.PipelineRuns().Lister(),
 		informerSynced: informer.PipelineRuns().Informer().HasSynced,
 		clientset:      clientset,
 		buildClientset: buildClientset,
 		wq:             wq,
+
 		buildInventory: buildInventory,
 	}
 	// the PipelineRun objects that have already triggered BuildRuns are filtered out, all other

@@ -63,6 +63,9 @@ func pipelineRunReferencesShipwright(pipelineRun *tknapisv1beta1.PipelineRun) bo
 // the current instance.
 func pipelineRunNameMatchesLabel(pipelineRun *tknapisv1beta1.PipelineRun) bool {
 	labels := pipelineRun.GetLabels()
+	if labels == nil {
+		return false
+	}
 	name, exists := labels[PipelineRunNameKey]
 	return exists && pipelineRun.GetName() == name
 }

@@ -17,8 +17,16 @@ const (
 	GitRef               = "refs/heads/main"
 )
 
-func GitHubPushEvent() *github.PushEvent {
-	return &github.PushEvent{
+func GitHubPingEvent() github.PingEvent {
+	return github.PingEvent{
+		Zen:          github.String("zen"),
+		HookID:       github.Int64(0),
+		Installation: &github.Installation{},
+	}
+}
+
+func GitHubPushEvent() github.PushEvent {
+	return github.PushEvent{
 		Repo: &github.PushEventRepository{
 			HTMLURL:  github.String(RepoURL),
 			FullName: github.String(RepoFullName),
@@ -27,7 +35,7 @@ func GitHubPushEvent() *github.PushEvent {
 			ID:      github.String(HeadCommitID),
 			Message: github.String(HeadCommitMsg),
 			Timestamp: &github.Timestamp{
-				Time: time.Now(),
+				Time: time.Date(2022, time.March, 1, 0, 0, 0, 0, time.Local),
 			},
 			Author: &github.CommitAuthor{
 				Name: github.String(HeadCommitAuthorName),

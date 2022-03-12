@@ -288,7 +288,8 @@ func NewTektonRunController(
 ) *RunController {
 	wq := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "runs")
 	c := &RunController{
-		ctx:               ctx,
+		ctx: ctx,
+
 		runInformer:       runInformer,
 		runLister:         runInformer.Runs().Lister(),
 		runInformerSynced: runInformer.Runs().Informer().HasSynced,
@@ -301,7 +302,6 @@ func NewTektonRunController(
 
 		wq: wq,
 	}
-
 	// the Tekton Run objects are filtered by referencing Shipwright resources, but then are simply
 	// compared and enqueued regularly
 	runInformer.Runs().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
@@ -312,7 +312,6 @@ func NewTektonRunController(
 			DeleteFunc: enqueueRunFn(wq),
 		},
 	})
-
 	// the BuildRun objects are filtered by the ones owned by Tekton, and therefore, on enqueuing
 	// those objects the actual Tekton Run name is extracted and enqueued instead
 	buildRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
@@ -323,6 +322,5 @@ func NewTektonRunController(
 			DeleteFunc: c.enqueueBuildRunOwner,
 		},
 	})
-
 	return c
 }

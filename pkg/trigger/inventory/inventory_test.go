@@ -11,23 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var buildWithTrigger = &v1alpha1.Build{
-	ObjectMeta: metav1.ObjectMeta{
-		Namespace: "namespace",
-		Name:      "name",
-	},
-	Spec: v1alpha1.BuildSpec{
-		Source: v1alpha1.Source{
-			URL: &stubs.RepoURL,
-		},
-		Trigger: &v1alpha1.Trigger{
-			When: []v1alpha1.TriggerWhen{{
-				Type:     v1alpha1.WhenPush,
-				Branches: []string{"main"},
-			}},
-		},
-	},
-}
+var buildWithTrigger = stubs.ShipwrightBuildWithTriggers("name", stubs.TriggerWhenPushToMain)
 
 func TestInventory(t *testing.T) {
 	g := gomega.NewWithT(t)
@@ -35,7 +19,7 @@ func TestInventory(t *testing.T) {
 	i := NewInventory()
 
 	t.Run("adding empty inventory item", func(_ *testing.T) {
-		i.Add(buildWithTrigger)
+		i.Add(&buildWithTrigger)
 		g.Expect(len(i.cache)).To(gomega.Equal(1))
 
 		_, exists := i.cache[types.NamespacedName{Namespace: "namespace", Name: "name"}]
@@ -52,7 +36,7 @@ func TestInventorySearchForgit(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	i := NewInventory()
-	i.Add(buildWithTrigger)
+	i.Add(&buildWithTrigger)
 
 	t.Run("should not find any results", func(_ *testing.T) {
 		found := i.SearchForGit(v1alpha1.WhenPush, "", "")

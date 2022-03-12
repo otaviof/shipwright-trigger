@@ -13,9 +13,12 @@ import (
 // Inventory keeps track of Build object details, on which it can find objects that match the
 // repository URL and trigger rules.
 type Inventory struct {
-	mutex sync.Mutex                            // mutex instance
+	m sync.Mutex
+
 	cache map[types.NamespacedName]TriggerRules // cache storage
 }
+
+var _ Interface = &Inventory{}
 
 // TriggerRules keeps the source and webhook trigger information for each Build instance.
 type TriggerRules struct {
@@ -28,8 +31,8 @@ type SearchFn func(TriggerRules) bool
 
 // Add insert or update an existing record.
 func (i *Inventory) Add(b *v1alpha1.Build) {
-	i.mutex.Lock()
-	defer i.mutex.Unlock()
+	i.m.Lock()
+	defer i.m.Unlock()
 
 	if b.Spec.Trigger == nil {
 		b.Spec.Trigger = &v1alpha1.Trigger{}
@@ -44,8 +47,8 @@ func (i *Inventory) Add(b *v1alpha1.Build) {
 
 // Remove the informed entry from the cache.
 func (i *Inventory) Remove(buildName types.NamespacedName) {
-	i.mutex.Lock()
-	defer i.mutex.Unlock()
+	i.m.Lock()
+	defer i.m.Unlock()
 
 	log.Printf("Removing Build %q from the inventory", buildName)
 	if _, ok := i.cache[buildName]; !ok {
@@ -86,6 +89,9 @@ func (i *Inventory) SearchForObjectRef(
 	whenType v1alpha1.WhenType,
 	objectRef *v1alpha1.ObjectRef,
 ) []SearchResult {
+	i.m.Lock()
+	defer i.m.Unlock()
+
 	return i.loopByWhenType(whenType, func(tr TriggerRules) bool {
 		for _, w := range tr.trigger.When {
 			if w.ObjectRef == nil {
@@ -133,6 +139,9 @@ func (i *Inventory) SearchForObjectRef(
 // SearchForGit search for builds using the Git repository details, like the URL, branch name and
 // such type of information.
 func (i *Inventory) SearchForGit(whenType v1alpha1.WhenType, repoURL, branch string) []SearchResult {
+	i.m.Lock()
+	defer i.m.Unlock()
+
 	return i.loopByWhenType(whenType, func(tr TriggerRules) bool {
 		// first thing to compare, is the repository URL, it must match in order to define the actual
 		// builds that are representing the repository

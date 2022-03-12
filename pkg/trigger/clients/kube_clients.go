@@ -18,8 +18,10 @@ type KubeClients struct {
 	tektonClientset *tknclientset.Clientset   // tekton pipelines clientset
 }
 
-// GetRestConfig returns the existing rest.Config instance, or instantiate one.
-func (c *KubeClients) GetRestConfig() (*rest.Config, error) {
+var _ Interface = &KubeClients{}
+
+// getRestConfig returns the existing rest.Config instance, or instantiate one.
+func (c *KubeClients) getRestConfig() (*rest.Config, error) {
 	if c.restConfig != nil {
 		return c.restConfig, nil
 	}
@@ -34,7 +36,7 @@ func (c *KubeClients) GetRestConfig() (*rest.Config, error) {
 }
 
 // GetKubernetesClientset returns the existing Kubernetes clientset instance, or instantiate one.
-func (c *KubeClients) GetKubernetesClientset() (*kubernetes.Clientset, error) {
+func (c *KubeClients) GetKubernetesClientset() (kubernetes.Interface, error) {
 	if c.clientset != nil {
 		return c.clientset, nil
 	}
@@ -47,7 +49,7 @@ func (c *KubeClients) GetKubernetesClientset() (*kubernetes.Clientset, error) {
 }
 
 // GetShipwrightClientset returns the existing Shipwright clientset instance, or instantiate one.
-func (c *KubeClients) GetShipwrightClientset() (*buildclientset.Clientset, error) {
+func (c *KubeClients) GetShipwrightClientset() (buildclientset.Interface, error) {
 	if c.buildClientset != nil {
 		return c.buildClientset, nil
 	}
@@ -60,7 +62,7 @@ func (c *KubeClients) GetShipwrightClientset() (*buildclientset.Clientset, error
 }
 
 // GetTektonClientset returns the existing Tekton Pipelines clientset instance, or instantiate one.
-func (c *KubeClients) GetTektonClientset() (*tknclientset.Clientset, error) {
+func (c *KubeClients) GetTektonClientset() (tknclientset.Interface, error) {
 	if c.tektonClientset != nil {
 		return c.tektonClientset, nil
 	}
@@ -75,7 +77,7 @@ func (c *KubeClients) GetTektonClientset() (*tknclientset.Clientset, error) {
 // NewKubeClients intantiate a new KubeClients.
 func NewKubeClients(flags *genericclioptions.ConfigFlags) (*KubeClients, error) {
 	kubeClients := &KubeClients{flags: flags}
-	if _, err := kubeClients.GetRestConfig(); err != nil {
+	if _, err := kubeClients.getRestConfig(); err != nil {
 		return nil, err
 	}
 	return kubeClients, nil

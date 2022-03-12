@@ -14,6 +14,8 @@ import (
 // GitHubWebHook responsible for handling WebHook requests coming from GitHub, implements Interface.
 type GitHubWebHook struct{}
 
+var _ Interface = &GitHubWebHook{}
+
 // ExtractRequestPayload parse the WebHook request in order to read the body payload, and determine
 // the type of event based on the headers.
 func (g *GitHubWebHook) ExtractRequestPayload(r *http.Request) (*RequestPayload, error) {

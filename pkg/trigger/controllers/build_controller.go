@@ -29,6 +29,8 @@ type BuildController struct {
 	buildInventory inventory.Interface // inventory instance
 }
 
+var _ Interface = &BuildController{}
+
 // sync handle the synchronization of the resources with the Inventory.
 func (c *BuildController) sync(key string) error {
 	ns, name, err := cache.SplitMetaNamespaceKey(key)
@@ -85,11 +87,13 @@ func NewBuildController(
 ) *BuildController {
 	wq := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "builds")
 	c := &BuildController{
-		ctx:            ctx,
+		ctx: ctx,
+
 		informer:       informer,
 		lister:         informer.Lister(),
 		informerSynced: informer.Informer().HasSynced,
 		wq:             wq,
+
 		buildInventory: buildInventory,
 	}
 	informer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
