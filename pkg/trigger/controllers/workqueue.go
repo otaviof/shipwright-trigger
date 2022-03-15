@@ -140,26 +140,3 @@ func compareAndEnqueuePipelineRunFn(wq workqueue.RateLimitingInterface) compareA
 		workQueueAdd(wq, newObj)
 	}
 }
-
-// compareAndEnqueueRunFn compares and enqueues Tekton Run objects.
-func compareAndEnqueueRunFn(wq workqueue.RateLimitingInterface) compareAndEnqueueFn {
-	return func(oldObj, newObj interface{}) {
-		oldRun, ok := oldObj.(*tknapisv1alpha1.Run)
-		if !ok {
-			log.Printf("Unable to cast object as Tekton Run: '%#v'", oldObj)
-			return
-		}
-		newRun, ok := newObj.(*tknapisv1alpha1.Run)
-		if !ok {
-			log.Printf("Unable to cast object as Tekton Run: '%#v'", newObj)
-			return
-		}
-
-		if reflect.DeepEqual(oldRun.Spec, newRun.Spec) &&
-			reflect.DeepEqual(oldRun.Status, newRun.Status) {
-			return
-		}
-
-		workQueueAdd(wq, newObj)
-	}
-}

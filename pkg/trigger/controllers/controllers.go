@@ -85,7 +85,7 @@ func (c *Controller) bootstrap(kubeClients *clients.KubeClients) error {
 		c.buildInformerFactory.Shipwright().V1alpha1().Builds(),
 		c.buildInventory,
 	)
-	c.controllersMap["tekton-run"] = NewTektonRunController(
+	c.controllersMap["tekton-run"] = NewRunController(
 		c.ctx,
 		c.tektonInformerFactory.Tekton().V1alpha1(),
 		tektonClientset,

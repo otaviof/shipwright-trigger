@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	tknapisv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknapisv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var TektonPipelineRunStatusCustomTaskShipwright = &tknapisv1beta1.PipelineSpec{
-	Tasks: []tknapisv1beta1.PipelineTask{TektonCustomTaskShipwright},
+	Tasks: []tknapisv1beta1.PipelineTask{TektonPipelineTaskRefToShipwright},
 }
 
-var TektonCustomTaskShipwright = tknapisv1beta1.PipelineTask{
+var TektonPipelineTaskRefToShipwright = tknapisv1beta1.PipelineTask{
 	Name: "shipwright",
 	TaskRef: &tknapisv1beta1.TaskRef{
 		APIVersion: ShipwrightAPIVersion,
@@ -20,9 +21,33 @@ var TektonCustomTaskShipwright = tknapisv1beta1.PipelineTask{
 	},
 }
 
+var TektonTaskRefToShipwright = &tknapisv1beta1.TaskRef{
+	APIVersion: ShipwrightAPIVersion,
+	Kind:       "Build",
+	Name:       "shipwright-ex",
+}
+
+var TektonTaskRefToTekton = &tknapisv1beta1.TaskRef{
+	Name: "task-ex",
+}
+
+func TektonRun(name string, ref *tknapisv1beta1.TaskRef) tknapisv1alpha1.Run {
+	return tknapisv1alpha1.Run{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: Namespace,
+			Name:      name,
+		},
+		Spec: tknapisv1alpha1.RunSpec{
+			Ref: ref,
+		},
+	}
+}
+
 func TektonPipelineRunCanceled(name string) tknapisv1beta1.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
-	pipelineRun.Spec.Status = tknapisv1beta1.PipelineRunSpecStatus(tknapisv1beta1.PipelineRunReasonCancelled)
+	pipelineRun.Spec.Status = tknapisv1beta1.PipelineRunSpecStatus(
+		tknapisv1beta1.PipelineRunReasonCancelled,
+	)
 	return pipelineRun
 }
 

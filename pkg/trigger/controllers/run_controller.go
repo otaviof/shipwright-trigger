@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
@@ -33,6 +34,7 @@ import (
 // the BuildRun status updates, reflecting those on the Tekton Run parent. By making sure the status
 // is kept up to date, Tekton Pipelines can identify when the Tekton Run is done.
 type RunController struct {
+	m   sync.Mutex
 	ctx context.Context
 
 	runInformer       tkninformerv1alpha1.Interface // run informer
@@ -55,30 +57,9 @@ var ShipwrightAPIVersion = fmt.Sprintf(
 )
 
 // createBuildRun creates a new BuildRun instance using the informed Tekton Run to establish the
-// ownership, to identify the Build resource name, and the "params" present in the Run object is
-// copied over to the new Buildrun.
+// ownership and to identify the Build resource name. If there are Run parameters, those are copied
+// over to the new Buildrun.
 func (c *RunController) createBuildRun(run *tknapisv1alpha1.Run) (*v1alpha1.BuildRun, error) {
-	paramValues := []buildapisv1alpha1.ParamValue{}
-	for _, p := range run.Spec.Params {
-		paramValue := buildapisv1alpha1.ParamValue{
-			Name:        p.Name,
-			SingleValue: &buildapisv1alpha1.SingleValue{},
-		}
-		if p.Value.Type == tknapisv1alpha1.ParamTypeArray {
-			paramValue.Values = []buildapisv1alpha1.SingleValue{}
-			for _, v := range p.Value.ArrayVal {
-				paramValue.Values = append(paramValue.Values, buildapisv1alpha1.SingleValue{
-					Value: &v,
-				})
-			}
-		} else {
-			paramValue.SingleValue = &buildapisv1alpha1.SingleValue{
-				Value: &p.Value.StringVal,
-			}
-		}
-		paramValues = append(paramValues, paramValue)
-	}
-
 	buildClient := c.buildClientset.ShipwrightV1alpha1().BuildRuns(run.GetNamespace())
 	return buildClient.Create(c.ctx, &v1alpha1.BuildRun{
 		ObjectMeta: metav1.ObjectMeta{
@@ -94,7 +75,7 @@ func (c *RunController) createBuildRun(run *tknapisv1alpha1.Run) (*v1alpha1.Buil
 			}},
 		},
 		Spec: v1alpha1.BuildRunSpec{
-			ParamValues: paramValues,
+			ParamValues: TektonRunParamsToShipwrightParamValues(run),
 			BuildRef: v1alpha1.BuildRef{
 				APIVersion: &run.Spec.Ref.APIVersion,
 				Name:       run.Spec.Ref.Name,
@@ -105,6 +86,9 @@ func (c *RunController) createBuildRun(run *tknapisv1alpha1.Run) (*v1alpha1.Buil
 
 // updateRunStatus reflect the BuildRun status into the Tekton Run resource.
 func (c *RunController) updateRunStatus(run *tknapisv1alpha1.Run, br *v1alpha1.BuildRun) error {
+	c.m.Lock()
+	defer c.m.Unlock()
+
 	run.Status.CompletionTime = br.Status.CompletionTime
 	run.Status.Conditions = knativev1.Conditions{}
 
@@ -256,6 +240,31 @@ func (c *RunController) enqueueBuildRunOwner(obj interface{}) {
 	c.wq.Add(runName.String())
 }
 
+// compareAndEnqueueRun inspect the Run instances comparing if both spec or status have been updated,
+// and when it happens it enqueues the new object.
+func (c *RunController) compareAndEnqueueRun(oldObj, newObj interface{}) {
+	c.m.Lock()
+	defer c.m.Unlock()
+
+	oldRun, ok := oldObj.(*tknapisv1alpha1.Run)
+	if !ok {
+		log.Printf("Unable to cast object as Tekton Run: '%#v'", oldObj)
+		return
+	}
+	newRun, ok := newObj.(*tknapisv1alpha1.Run)
+	if !ok {
+		log.Printf("Unable to cast object as Tekton Run: '%#v'", newObj)
+		return
+	}
+
+	if reflect.DeepEqual(oldRun.Spec, newRun.Spec) &&
+		reflect.DeepEqual(oldRun.Status, newRun.Status) {
+		return
+	}
+
+	workQueueAdd(c.wq, newObj)
+}
+
 // Start the controller by waiting for informer cache synchronization.
 func (c *RunController) Start() error {
 	log.Printf("Waiting for Tekton Run informer cache synchronization")
@@ -278,8 +287,8 @@ func (c *RunController) Run() error {
 	return nil
 }
 
-// NewTektonRunController instantiate the Tekton Run controller.
-func NewTektonRunController(
+// NewRunController instantiate the Tekton Run controller.
+func NewRunController(
 	ctx context.Context,
 	runInformer tkninformerv1alpha1.Interface,
 	tektonClientset tknclientset.Interface,
@@ -308,7 +317,7 @@ func NewTektonRunController(
 		FilterFunc: tkncontroller.FilterRunRef(ShipwrightAPIVersion, "Build"),
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc:    enqueueRunFn(wq),
-			UpdateFunc: compareAndEnqueueRunFn(wq),
+			UpdateFunc: c.compareAndEnqueueRun,
 			DeleteFunc: enqueueRunFn(wq),
 		},
 	})
