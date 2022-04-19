@@ -123,36 +123,67 @@ spec:
 
 </details>
 
-# Install and Contribute
+# Install
 
-Before you install Shipwright Trigger, please install Shipwright Build Controller from branch [`shipwright-trigger-api`][buildControllerFork] ([PR #1008][buildPullRequest1008]), it contains the new API with triggers support:
+In order to have Shipwright Trigger up and and running, you have to first install Tekton and Shipwright Build Controller, consequently the Trigger instance can interact with the Build Controller which relies on Tekton Pipelines.
 
-```bash
-git clone https://github.com/otaviof/build.git
-git checkout shipwright-trigger-api
+## Tekton Pipelines
 
-make install-strategies install GO_ARCH="amd64" IMAGE_NAMESPACE="otaviof/build"
-```
-
-Please note the parameters informed to the `make install` target and adjust them for own your environment.
-
-With the Build Controller in place, you can install Shipwright Trigger:
+If you don't have Tekton already up and running, you can rollout the instance used during testing using the `Makefile` target, as per:
 
 ```bash
-make install KO_DOCKER_REPO="ghcr.io/otaviof"
+make install-tekton TEKTON_VERSION="..."
 ```
 
-The deployment happens on the `shipwright-build` namespace, the default location for the other related components. And, please remember to adjust `KO_DOCKER_REPO`.
+The `TEKTON_VERSION` argument is optional, otherwise it will employ the default version.
 
-## Tekton Custom-Tasks Feature Flag
+### Tekton Custom-Tasks Support
 
-In order to use Tekton's Custom-Tasks, you need to edit the `feature-flags` ConfigMap and set to `true` the `enable-custom-tasks` attribute. 
+To use Tekton's Custom-Tasks, you need to edit the `feature-flags` ConfigMap and set to `true` the `enable-custom-tasks` attribute. Run the following command to edit Tekton Configuration:
 
 ```bash
 kubectl --namespace=tekton-pipelines edit configmap feature-flags
 ```
 
 When using OpenShift Pipelines operator, the ConfigMap is located at the `openshift-pipelines` namespace instead.
+
+
+## Shipwright Build Controller
+
+The Shipwright Build Controller needs the API from [PR #1008][buildPullRequest1008], you can clone and switch to the pull-request branch using the following command:
+
+```bash
+git clone https://github.com/otaviof/build.git --branch=shipwright-trigger-api
+cd build
+```
+
+Once you're inside the Build Controller directory, you can rollout the Build Controller using the `install` target on the project `Makefile`. The install target uses `ko` to build and upload the container image and deploy all Kubernetes resources in a single step.
+
+Note the `install` target uses `IMAGE_HOST` and `IMAGE_NAMESPACE` to define the fully qualified container image name. The following example uploads uses `ghcr.io/otaviof/build` image name:
+
+```bash
+make install IMAGE_HOST="ghcr.io" IMAGE_NAMESPACE="otaviof/build"
+```
+
+Make sure you both have access to a container registry to upload the image. Once you have the Controller installed, deploy the default Build Strategies, with:
+
+```bash
+make install-strategies
+```
+
+## Shipwright Trigger
+
+Once you have Tekton and the Build Controller up and running, you can rollout Shipwright Trigger, this project. Once again we will employ `ko` to build, upload and rollout the Kubernetes resources in a single step, however, here we expose the `KO_DOCKER_REPO` directly which is the base for the fully qualified image name.
+
+To build and upload the image `ghcr.io/otaviof/trigger`, use the following `install` target example:
+
+```bash
+make install KO_DOCKER_REPO="ghcr.io/otaviof"
+```
+
+Please tweak the `KO_KO_DOCKER_REPO` accordingly.
+
+The deployment happens on the `shipwright-build` namespace, the default location for the other Shipwright components.
 
 # Components
 
