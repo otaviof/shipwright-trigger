@@ -41,3 +41,6 @@ test: test-unit test-e2e
 .PHONY: test-unit
 test-unit:
 	go test $(GOFLAGS_TEST) $(CMD) $(PKG) $(ARGS)
+
+install-tekton:
+	./hack/install-tekton.sh
