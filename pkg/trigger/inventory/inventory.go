@@ -60,7 +60,7 @@ func (i *Inventory) Remove(buildName types.NamespacedName) {
 
 // loopByWhenType execute the search function informed against each inventory entry, when it returns
 // true it returns the build name on the search results instance.
-func (i *Inventory) loopByWhenType(whenType v1alpha1.WhenType, fn SearchFn) []SearchResult {
+func (i *Inventory) loopByWhenType(whenType v1alpha1.WhenTypeName, fn SearchFn) []SearchResult {
 	found := []SearchResult{}
 	for k, v := range i.cache {
 		for _, when := range v.trigger.When {
@@ -86,8 +86,8 @@ func (i *Inventory) loopByWhenType(whenType v1alpha1.WhenType, fn SearchFn) []Se
 
 // SearchForObjectRef search for builds using the ObjectRef as query parameters.
 func (i *Inventory) SearchForObjectRef(
-	whenType v1alpha1.WhenType,
-	objectRef *v1alpha1.ObjectRef,
+	whenType v1alpha1.WhenTypeName,
+	objectRef *v1alpha1.WhenObjectRef,
 ) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
@@ -138,7 +138,7 @@ func (i *Inventory) SearchForObjectRef(
 
 // SearchForGit search for builds using the Git repository details, like the URL, branch name and
 // such type of information.
-func (i *Inventory) SearchForGit(whenType v1alpha1.WhenType, repoURL, branch string) []SearchResult {
+func (i *Inventory) SearchForGit(whenType v1alpha1.WhenTypeName, repoURL, branch string) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
 
@@ -152,7 +152,8 @@ func (i *Inventory) SearchForGit(whenType v1alpha1.WhenType, repoURL, branch str
 		// second part is to search for event-type and compare the informed branch, with the allowed
 		// branches, configured for that build
 		for _, w := range tr.trigger.When {
-			for _, b := range w.Branches {
+			branches := w.GetBranches(whenType)
+			for _, b := range branches {
 				if branch == b {
 					log.Printf("Repository URL %q (%q) matches criteria", repoURL, branch)
 					return true

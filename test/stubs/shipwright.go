@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
-	buildapisv1alpha1 "github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -12,18 +11,23 @@ const Namespace = "namespace"
 
 var ShipwrightAPIVersion = fmt.Sprintf(
 	"%s/%s",
-	buildapisv1alpha1.SchemeGroupVersion.Group,
-	buildapisv1alpha1.SchemeGroupVersion.Version,
+	v1alpha1.SchemeGroupVersion.Group,
+	v1alpha1.SchemeGroupVersion.Version,
 )
 
 var TriggerWhenPushToMain = v1alpha1.TriggerWhen{
-	Type:     v1alpha1.WhenPush,
-	Branches: []string{"main"},
+	Type: v1alpha1.WhenTypeGitHub,
+	GitHub: &v1alpha1.WhenGitHub{
+		Events: []v1alpha1.GitHubEventName{
+			v1alpha1.GitHubPushEvent,
+		},
+		Branches: []string{"main"},
+	},
 }
 
 var TriggerWhenPipelineSucceeded = v1alpha1.TriggerWhen{
-	Type: v1alpha1.WhenPipeline,
-	ObjectRef: &v1alpha1.ObjectRef{
+	Type: v1alpha1.WhenTypePipeline,
+	ObjectRef: &v1alpha1.WhenObjectRef{
 		Name:   "pipeline",
 		Status: []string{"Succeeded"},
 	},

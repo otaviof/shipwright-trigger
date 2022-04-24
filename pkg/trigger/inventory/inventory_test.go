@@ -39,15 +39,15 @@ func TestInventorySearchForgit(t *testing.T) {
 	i.Add(&buildWithTrigger)
 
 	t.Run("should not find any results", func(_ *testing.T) {
-		found := i.SearchForGit(v1alpha1.WhenPush, "", "")
+		found := i.SearchForGit(v1alpha1.WhenTypeGitHub, "", "")
 		g.Expect(len(found)).To(gomega.Equal(0))
 
-		found = i.SearchForGit(v1alpha1.WhenPush, stubs.RepoURL, "")
+		found = i.SearchForGit(v1alpha1.WhenTypeGitHub, stubs.RepoURL, "")
 		g.Expect(len(found)).To(gomega.Equal(0))
 	})
 
 	t.Run("should find the build object", func(_ *testing.T) {
-		found := i.SearchForGit(v1alpha1.WhenPush, stubs.RepoURL, "main")
+		found := i.SearchForGit(v1alpha1.WhenTypeGitHub, stubs.RepoURL, "main")
 		g.Expect(len(found)).To(gomega.Equal(1))
 	})
 }
@@ -61,8 +61,8 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		Spec: v1alpha1.BuildSpec{
 			Trigger: &v1alpha1.Trigger{
 				When: []v1alpha1.TriggerWhen{{
-					Type: v1alpha1.WhenPipeline,
-					ObjectRef: &v1alpha1.ObjectRef{
+					Type: v1alpha1.WhenTypePipeline,
+					ObjectRef: &v1alpha1.WhenObjectRef{
 						Name:   "name",
 						Status: []string{"Successful"},
 					},
@@ -79,8 +79,8 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		Spec: v1alpha1.BuildSpec{
 			Trigger: &v1alpha1.Trigger{
 				When: []v1alpha1.TriggerWhen{{
-					Type: v1alpha1.WhenPipeline,
-					ObjectRef: &v1alpha1.ObjectRef{
+					Type: v1alpha1.WhenTypePipeline,
+					ObjectRef: &v1alpha1.WhenObjectRef{
 						Status:   []string{"Successful"},
 						Selector: map[string]string{"k": "v"},
 					},
@@ -92,14 +92,14 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 	tests := []struct {
 		name      string
 		builds    []v1alpha1.Build
-		whenType  v1alpha1.WhenType
-		objectRef v1alpha1.ObjectRef
+		whenType  v1alpha1.WhenTypeName
+		objectRef v1alpha1.WhenObjectRef
 		want      []SearchResult
 	}{{
 		name:     "find build by name",
 		builds:   []v1alpha1.Build{buildWithObjectRefName},
-		whenType: v1alpha1.WhenPipeline,
-		objectRef: v1alpha1.ObjectRef{
+		whenType: v1alpha1.WhenTypePipeline,
+		objectRef: v1alpha1.WhenObjectRef{
 			Name:   "name",
 			Status: []string{"Successful"},
 		},
@@ -109,8 +109,8 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 	}, {
 		name:     "find build by label selector",
 		builds:   []v1alpha1.Build{buildWithObjectRefSelector},
-		whenType: v1alpha1.WhenPipeline,
-		objectRef: v1alpha1.ObjectRef{
+		whenType: v1alpha1.WhenTypePipeline,
+		objectRef: v1alpha1.WhenObjectRef{
 			Status:   []string{"Successful"},
 			Selector: map[string]string{"k": "v"},
 		},
@@ -120,8 +120,8 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 	}, {
 		name:     "does not find builds, due to wrong selector",
 		builds:   []v1alpha1.Build{buildWithObjectRefSelector},
-		whenType: v1alpha1.WhenPipeline,
-		objectRef: v1alpha1.ObjectRef{
+		whenType: v1alpha1.WhenTypePipeline,
+		objectRef: v1alpha1.WhenObjectRef{
 			Status:   []string{"Successful"},
 			Selector: map[string]string{"wrong": "label"},
 		},
@@ -129,8 +129,8 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 	}, {
 		name:     "does not find builds, due to wrong name",
 		builds:   []v1alpha1.Build{buildWithObjectRefSelector},
-		whenType: v1alpha1.WhenPipeline,
-		objectRef: v1alpha1.ObjectRef{
+		whenType: v1alpha1.WhenTypePipeline,
+		objectRef: v1alpha1.WhenObjectRef{
 			Name:   "wrong",
 			Status: []string{"Successful"},
 		},

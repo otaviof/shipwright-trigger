@@ -123,7 +123,8 @@ func TestGitHubWebHook_ExtractBuildSelector(t *testing.T) {
 			Payload:   jsonMarshal(t, stubs.GitHubPushEvent()),
 		},
 		want: &BuildSelector{
-			WhenType:     v1alpha1.WhenPush,
+			WhenType:     v1alpha1.WhenTypeGitHub,
+			EventName:    string(v1alpha1.GitHubPushEvent),
 			RepoURL:      stubs.RepoURL,
 			RepoFullName: stubs.RepoFullName,
 			Revision:     "main",

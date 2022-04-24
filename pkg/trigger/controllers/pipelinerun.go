@@ -44,7 +44,7 @@ func ParsePipelineRunStatus(pipelineRun *tknapisv1beta1.PipelineRun) (string, er
 }
 
 // PipelineRunToObjectRef transforms the informed PipelineRun instance to a ObjectRef.
-func PipelineRunToObjectRef(pipelineRun *tknapisv1beta1.PipelineRun) (*v1alpha1.ObjectRef, error) {
+func PipelineRunToObjectRef(pipelineRun *tknapisv1beta1.PipelineRun) (*v1alpha1.WhenObjectRef, error) {
 	status, err := ParsePipelineRunStatus(pipelineRun)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func PipelineRunToObjectRef(pipelineRun *tknapisv1beta1.PipelineRun) (*v1alpha1.
 			delete(labels, k)
 		}
 	}
-	return &v1alpha1.ObjectRef{
+	return &v1alpha1.WhenObjectRef{
 		Name:     pipelineRun.Spec.PipelineRef.Name,
 		Status:   []string{status},
 		Selector: labels,

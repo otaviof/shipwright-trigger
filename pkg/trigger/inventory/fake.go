@@ -71,7 +71,7 @@ func (i *FakeInventory) search() []SearchResult {
 }
 
 // SearchForObjectRef returns all Builds in cache.
-func (i *FakeInventory) SearchForObjectRef(v1alpha1.WhenType, *v1alpha1.ObjectRef) []SearchResult {
+func (i *FakeInventory) SearchForObjectRef(v1alpha1.WhenTypeName, *v1alpha1.WhenObjectRef) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
 
@@ -79,7 +79,7 @@ func (i *FakeInventory) SearchForObjectRef(v1alpha1.WhenType, *v1alpha1.ObjectRe
 }
 
 // SearchForGit returns all Builds in cache.
-func (i *FakeInventory) SearchForGit(v1alpha1.WhenType, string, string) []SearchResult {
+func (i *FakeInventory) SearchForGit(v1alpha1.WhenTypeName, string, string) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
 

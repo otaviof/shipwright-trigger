@@ -139,7 +139,7 @@ func (c *PipelineRunController) sync(key string) error {
 	}
 	log.Printf("Searching for Builds matching: name=%q, status=%q, matchLabels=%q",
 		objectRef.Name, objectRef.Status, objectRef.Selector)
-	buildsToBeTriggered := c.buildInventory.SearchForObjectRef(v1alpha1.WhenPipeline, objectRef)
+	buildsToBeTriggered := c.buildInventory.SearchForObjectRef(v1alpha1.WhenTypePipeline, objectRef)
 	if len(buildsToBeTriggered) == 0 {
 		return nil
 	}

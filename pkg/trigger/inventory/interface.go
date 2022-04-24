@@ -8,6 +8,6 @@ import (
 type Interface interface {
 	Add(*v1alpha1.Build)
 	Remove(types.NamespacedName)
-	SearchForObjectRef(v1alpha1.WhenType, *v1alpha1.ObjectRef) []SearchResult
-	SearchForGit(v1alpha1.WhenType, string, string) []SearchResult
+	SearchForObjectRef(v1alpha1.WhenTypeName, *v1alpha1.WhenObjectRef) []SearchResult
+	SearchForGit(v1alpha1.WhenTypeName, string, string) []SearchResult
 }

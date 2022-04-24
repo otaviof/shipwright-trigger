@@ -50,9 +50,10 @@ func (g *GitHubWebHook) ExtractBuildSelector(rp *RequestPayload) (*BuildSelector
 	case *github.PingEvent:
 		log.Printf("Received a Ping event!")
 	case *github.PushEvent:
-		log.Printf("Received a %q event!", v1alpha1.WhenPush)
+		log.Printf("Received a %q %q event!", v1alpha1.GitHubPushEvent, v1alpha1.GitHubPushEvent)
 
-		selector.WhenType = v1alpha1.WhenPush
+		selector.WhenType = v1alpha1.WhenTypeGitHub
+		selector.EventName = string(v1alpha1.GitHubPushEvent)
 
 		repo := e.GetRepo()
 		if repo == nil {
@@ -67,9 +68,11 @@ func (g *GitHubWebHook) ExtractBuildSelector(rp *RequestPayload) (*BuildSelector
 		}
 		selector.Revision = strings.TrimPrefix(*e.Ref, "refs/heads/")
 	case *github.PullRequestEvent:
-		log.Printf("Received a %q event!", v1alpha1.WhenPullRequest)
+		log.Printf("Received a %q %q event!",
+			v1alpha1.WhenTypeGitHub, v1alpha1.GitHubPullRequestEvent)
 
-		selector.WhenType = v1alpha1.WhenPullRequest
+		selector.WhenType = v1alpha1.WhenTypeGitHub
+		selector.EventName = string(v1alpha1.GitHubPullRequestEvent)
 		panic("TODO: PullRequestEvent!!")
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrUnsupportedEventType, e)
