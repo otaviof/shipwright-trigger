@@ -26,14 +26,18 @@ The example uses a GitHub repository which upon receiving new commits (push), it
 apiVersion: shipwright.io/v1alpha1
 kind: Build
 spec:
+  # [...]
   trigger:
     secretRef:
       name: webhook-secret
     when:
       - name: push directly on the main branch
-        type: Push
-        branches:
-          - main
+        type: GitHub
+        github:
+          events:
+            - Push
+          branches:
+            - main
 ```
 
 The WebHook validation secret must be created as follows, note the `github-token` key needed to identify the service provider type, in this case GitHub:
@@ -57,6 +61,7 @@ On the Tekton integration demo, the following trigger is added on the `Build` re
 apiVersion: shipwright.io/v1alpha1
 kind: Build
 spec:
+  # [...]
   trigger:
     when:
       - name: tekton pipeline has "succeeded"
@@ -153,8 +158,7 @@ When using OpenShift Pipelines operator, the ConfigMap is located at the `opensh
 The Shipwright Build Controller needs the API from [PR #1008][buildPullRequest1008], you can clone and switch to the pull-request branch using the following command:
 
 ```bash
-git clone https://github.com/otaviof/build.git --branch=shipwright-trigger-api
-cd build
+git clone https://github.com/otaviof/build.git --branch=shipwright-trigger-api && cd build
 ```
 
 Once you're inside the Build Controller directory, you can rollout the Build Controller using the `install` target on the project `Makefile`. The install target uses `ko` to build and upload the container image and deploy all Kubernetes resources in a single step.
